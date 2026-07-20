@@ -40,8 +40,30 @@ export function QuizPanel() {
 
   // États du formulaire de création groupée
   const [selectedCourseTitle, setSelectedCourseTitle] = useState('')
+  const [courseFiliereFilter, setCourseFiliereFilter] = useState('all')
+  const [courseYearFilter, setCourseYearFilter] = useState('all')
   const [questionBlocks, setQuestionBlocks] = useState<QuestionBlock[]>([createEmptyQuestionBlock()])
   
+  const availableFilieres = Array.from(new Set(courses.map((course) => course.filiere).filter(Boolean))).sort()
+  const availableYears = Array.from(new Set(courses.map((course) => course.category).filter(Boolean))).sort()
+  const filteredCourses = courses.filter((course) => {
+    return (
+      (courseFiliereFilter === 'all' || course.filiere === courseFiliereFilter) &&
+      (courseYearFilter === 'all' || course.category === courseYearFilter)
+    )
+  })
+
+  useEffect(() => {
+    if (filteredCourses.length === 0) {
+      setSelectedCourseTitle('')
+      return
+    }
+
+    if (!filteredCourses.some((course) => course.title === selectedCourseTitle)) {
+      setSelectedCourseTitle(filteredCourses[0].title)
+    }
+  }, [filteredCourses, selectedCourseTitle])
+
   // États de gestion des fenêtres modales (Modification unique / Suppression)
   const [modalState, setModalState] = useState<{ type: 'edit' | 'delete'; item: FirestoreQuizQuestion | null }>({ 
     type: 'edit', 
@@ -269,14 +291,39 @@ export function QuizPanel() {
       {/* Formulaire d'Ajout de Série de Questions */}
       {showForm && (
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm space-y-6">
-          {/* Sélection du cours unique pour toute la série */}
-          <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
-            <label className="mb-2 block text-sm font-semibold text-slate-800">Cours associé à cette série de questions</label>
-            <select value={selectedCourseTitle} onChange={(e) => setSelectedCourseTitle(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-amber-400 font-medium">
-              {courses.map((course) => (
-                <option key={course.id} value={course.title}>{course.title}</option>
-              ))}
-            </select>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 md:col-span-1">
+              <label className="mb-2 block text-sm font-semibold text-slate-800">Filière</label>
+              <select value={courseFiliereFilter} onChange={(e) => setCourseFiliereFilter(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-amber-400 font-medium">
+                <option value="all">Toutes les filières</option>
+                {availableFilieres.map((filiere) => (
+                  <option key={filiere} value={filiere}>{filiere}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 md:col-span-1">
+              <label className="mb-2 block text-sm font-semibold text-slate-800">Année</label>
+              <select value={courseYearFilter} onChange={(e) => setCourseYearFilter(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-amber-400 font-medium">
+                <option value="all">Toutes les années</option>
+                {availableYears.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100 md:col-span-1">
+              <label className="mb-2 block text-sm font-semibold text-slate-800">Cours associé à cette série de questions</label>
+              <select value={selectedCourseTitle} onChange={(e) => setSelectedCourseTitle(e.target.value)} className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 outline-none focus:border-amber-400 font-medium">
+                {filteredCourses.length === 0 ? (
+                  <option value="">Aucun cours disponible</option>
+                ) : (
+                  filteredCourses.map((course) => (
+                    <option key={course.id} value={course.title}>{course.title}</option>
+                  ))
+                )}
+              </select>
+            </div>
           </div>
 
           {/* Liste dynamique des blocs de questions */}
