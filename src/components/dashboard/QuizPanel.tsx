@@ -9,7 +9,6 @@ import {
   type FirestoreCourseItem
 } from '../../services/firebaseService'
 
-// Structure d'un bloc de question individuel dans le formulaire de création
 interface QuestionBlock {
   prompt: string
   type: 'QCM' | 'QCD'
