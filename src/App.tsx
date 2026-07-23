@@ -5,10 +5,28 @@ import { LandingPage } from './pages/LandingPage'
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
 import { initializeFirebaseDemoData } from './services/migrationService'
 import { ensureFirebaseCollections } from './services/ensureFirebaseCollections'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from './firebase'
+import { signOutAdmin } from './services/firebaseService'
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const [currentPath, setCurrentPath] = useState(window.location.pathname)
+
+  // Écouter l'état d'authentification de Firebase
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setIsLoggedIn(true)
+      } else {
+        setIsLoggedIn(false)
+      }
+      setAuthLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   // Gérer le routage client réactif (popstate et clics sur liens locaux)
   useEffect(() => {
@@ -55,12 +73,26 @@ function App() {
     setCurrentPath(path)
   }
 
+  // Pendant que la session est en cours de vérification, on affiche un écran de chargement
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-600 font-medium">
+        Vérification de la session en cours...
+      </div>
+    )
+  }
+
   // Logique de Routage
   if (currentPath === '/dashboard' || currentPath.startsWith('/dashboard')) {
     if (isLoggedIn) {
       return (
         <DashboardPage 
-          onLogout={() => {
+          onLogout={async () => {
+            try {
+              await signOutAdmin()
+            } catch (error) {
+              console.error("Erreur lors de la déconnexion :", error)
+            }
             setIsLoggedIn(false)
             navigateTo('/')
           }} 

@@ -93,6 +93,8 @@ export const globalQuizQuestions: QuizQuestion[] = [
   {
     id: '1',
     courseTitle: 'Anatomie - Physiologie',
+    subjectLevel: 'Sujet 1',
+    subjectTitle: 'Généralités',
     prompt: 'Quelle est la valeur normale de la glycémie à jeun chez l’adulte ?',
     type: 'QCM',
     options: ['0,70 à 1,10 g/L', '1,10 à 1,40 g/L', '1,40 à 1,80 g/L', '0,50 à 0,70 g/L'],
@@ -102,6 +104,8 @@ export const globalQuizQuestions: QuizQuestion[] = [
   {
     id: '2',
     courseTitle: 'Soins Obstétricaux de Base (CPN)',
+    subjectLevel: 'Sujet 1',
+    subjectTitle: 'Généralités',
     prompt: 'Le signe de Chadwick est un signe de grossesse ?',
     type: 'QCD',
     options: ['Vrai', 'Faux'],
@@ -111,6 +115,8 @@ export const globalQuizQuestions: QuizQuestion[] = [
   {
     id: '3',
     courseTitle: 'Pharmacologie Spécialisée',
+    subjectLevel: 'Sujet 1',
+    subjectTitle: 'Généralités',
     prompt: 'Quel muscle est le site privilégié pour une injection intramusculaire chez le nourrisson ?',
     type: 'QCM',
     options: ['Grand fessier', 'Deltoïde', 'Vaste externe', 'Biceps'],

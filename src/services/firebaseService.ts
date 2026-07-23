@@ -330,6 +330,8 @@ export async function getQuizQuestionsFromFirestore(): Promise<FirestoreQuizQues
     return {
       id: doc.id,
       courseTitle: data.courseTitle || '',
+      subjectLevel: data.subjectLevel || 'Sujet 1',
+      subjectTitle: data.subjectTitle || 'Généralités',
       prompt: data.prompt || 'Question sans énoncé',
       type: data.type || 'QCM',
       options: Array.isArray(data.options) ? data.options : [],

@@ -13,6 +13,8 @@ export interface CourseItem {
 export interface QuizQuestion {
   id?: string
   courseTitle: string
+  subjectLevel: string
+  subjectTitle: string
   prompt: string
   type: 'QCM' | 'QCD'
   options: string[]
