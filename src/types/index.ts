@@ -1,4 +1,4 @@
-export type MenuKey = 'overview' | 'users' | 'classes' | 'filieres' | 'courses' | 'quiz'
+export type MenuKey = 'overview' | 'users' | 'classes' | 'filieres' | 'courses' | 'quiz' | 'settings'
 
 export interface CourseItem {
   id?: string

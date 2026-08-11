@@ -708,6 +708,13 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
               Politique de Confidentialité
             </button>
             <span className="text-slate-300">|</span>
+            <button
+              onClick={() => onNavigate('/guide-usage')}
+              className="hover:text-blue-600 transition duration-300 cursor-pointer bg-transparent border-none p-0 text-slate-500 font-semibold"
+            >
+              Guide d'usage
+            </button>
+            <span className="text-slate-300">|</span>
             <span>Support: contact@dsrevis.com</span>
           </div>
 

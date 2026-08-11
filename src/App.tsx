@@ -3,6 +3,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { LandingPage } from './pages/LandingPage'
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage'
+import { UserGuidePage } from './pages/UserGuidePage'
 import { initializeFirebaseDemoData } from './services/migrationService'
 import { ensureFirebaseCollections } from './services/ensureFirebaseCollections'
 import { onAuthStateChanged } from 'firebase/auth'
@@ -122,6 +123,10 @@ function App() {
 
   if (currentPath === '/politique-confidentialite' || currentPath === '/privacy') {
     return <PrivacyPolicyPage onNavigate={navigateTo} />
+  }
+
+  if (currentPath === '/guide-usage' || currentPath === '/guide') {
+    return <UserGuidePage onNavigate={navigateTo} />
   }
 
   // Par défaut, on affiche la Landing Page

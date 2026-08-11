@@ -1,4 +1,4 @@
-import { addDoc, collection, deleteDoc, doc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
+import { addDoc, collection, deleteDoc, doc, getDocs, setDoc, updateDoc, getDoc } from 'firebase/firestore'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth'
 import { auth, db } from '../firebase'
 import type { AppUser, CourseItem, QuizQuestion } from '../types'
@@ -74,6 +74,7 @@ export async function clearPedeagoficalDataOnly() {
     }
     
     console.log("Purge terminée ! La collection 'users' n'a pas été modifiée.")
+    await touchDatabaseVersion()
     return true
   } catch (error) {
     console.error("Erreur lors de la suppression des données :", error)
@@ -239,6 +240,7 @@ export async function deleteUser(id: string) {
 
 export async function addYear(year: string) {
   await addDoc(yearsCollection, { name: year })
+  await touchDatabaseVersion()
 }
 
 export async function getYearsFromFirestore(): Promise<AcademicYear[]> {
@@ -256,16 +258,19 @@ export async function getYearsFromFirestore(): Promise<AcademicYear[]> {
 
 export async function updateYear(id: string, name: string) {
   await updateDoc(doc(db, 'years', id), { name })
+  await touchDatabaseVersion()
 }
 
 export async function deleteYear(id: string) {
   await deleteDoc(doc(db, 'years', id))
+  await touchDatabaseVersion()
 }
 
 // --- COLLECTION : FILIERES ---
 
 export async function addFiliere(filiere: string) {
   await addDoc(filieresCollection, { name: filiere })
+  await touchDatabaseVersion()
 }
 
 export async function getFilieresFromFirestore(): Promise<FiliereItem[]> {
@@ -281,16 +286,19 @@ export async function getFilieresFromFirestore(): Promise<FiliereItem[]> {
 
 export async function updateFiliere(id: string, name: string) {
   await updateDoc(doc(db, 'filieres', id), { name })
+  await touchDatabaseVersion()
 }
 
 export async function deleteFiliere(id: string) {
   await deleteDoc(doc(db, 'filieres', id))
+  await touchDatabaseVersion()
 }
 
 // --- COLLECTION : COURSES ---
 
 export async function addCourse(course: CourseItem) {
   await addDoc(coursesCollection, course)
+  await touchDatabaseVersion()
 }
 
 export async function getCoursesFromFirestore(): Promise<FirestoreCourseItem[]> {
@@ -311,16 +319,19 @@ export async function getCoursesFromFirestore(): Promise<FirestoreCourseItem[]> 
 
 export async function updateCourse(id: string, updates: Partial<CourseItem>) {
   await updateDoc(doc(db, 'courses', id), updates)
+  await touchDatabaseVersion()
 }
 
 export async function deleteCourse(id: string) {
   await deleteDoc(doc(db, 'courses', id))
+  await touchDatabaseVersion()
 }
 
 // --- COLLECTION : QUIZ QUESTIONS ---
 
 export async function addQuizQuestion(question: QuizQuestion) {
   await addDoc(quizCollection, question)
+  await touchDatabaseVersion()
 }
 
 export async function getQuizQuestionsFromFirestore(): Promise<FirestoreQuizQuestion[]> {
@@ -343,8 +354,47 @@ export async function getQuizQuestionsFromFirestore(): Promise<FirestoreQuizQues
 
 export async function updateQuizQuestion(id: string, updates: Partial<QuizQuestion>) {
   await updateDoc(doc(db, 'quizQuestions', id), updates)
+  await touchDatabaseVersion()
 }
 
 export async function deleteQuizQuestion(id: string) {
   await deleteDoc(doc(db, 'quizQuestions', id))
+  await touchDatabaseVersion()
+}
+
+// --- CONFIGURATION DE L'APPLICATION ---
+export interface AppSettings {
+  whatsappNumber: string
+}
+
+const defaultSettings: AppSettings = {
+  whatsappNumber: '2250798646697'
+}
+
+export async function getAppSettingsFromFirestore(): Promise<AppSettings> {
+  const docRef = doc(db, 'settings', 'app')
+  const docSnap = await getDoc(docRef)
+  if (docSnap.exists()) {
+    const data = docSnap.data()
+    return {
+      whatsappNumber: data.whatsappNumber || '2250798646697'
+    }
+  } else {
+    await setDoc(docRef, defaultSettings)
+    return defaultSettings
+  }
+}
+
+export async function updateAppSettings(settings: Partial<AppSettings>) {
+  const docRef = doc(db, 'settings', 'app')
+  await setDoc(docRef, settings, { merge: true })
+}
+
+export async function touchDatabaseVersion() {
+  try {
+    const docRef = doc(db, 'settings', 'app')
+    await setDoc(docRef, { lastDatabaseUpdate: new Date().toISOString() }, { merge: true })
+  } catch (error) {
+    console.error('Error touching database version:', error)
+  }
 }
