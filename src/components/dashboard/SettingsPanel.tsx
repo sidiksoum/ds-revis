@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { getAppSettingsFromFirestore, updateAppSettings, type AppSettings } from '../../services/firebaseService'
+import { getAppSettingsFromFirestore, updateAppSettings } from '../../services/firebaseService'
 
 export function SettingsPanel() {
-  const [settings, setSettings] = useState<AppSettings | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [whatsappNumberInput, setWhatsappNumberInput] = useState('')
@@ -17,7 +16,6 @@ export function SettingsPanel() {
     try {
       setLoading(true)
       const fetchedSettings = await getAppSettingsFromFirestore()
-      setSettings(fetchedSettings)
       setWhatsappNumberInput(fetchedSettings.whatsappNumber)
     } catch (error) {
       console.error('Erreur lors du chargement des configurations :', error)
@@ -43,7 +41,6 @@ export function SettingsPanel() {
       const sanitizedNumber = whatsappNumberInput.replace(/\s+/g, '').replace(/[+]/g, '')
       await updateAppSettings({ whatsappNumber: sanitizedNumber })
       triggerFlash('Configurations enregistrées avec succès !')
-      setSettings({ whatsappNumber: sanitizedNumber })
     } catch (error) {
       console.error('Erreur lors de la sauvegarde des configurations :', error)
       triggerFlash('Erreur lors de la sauvegarde.', 'error')
