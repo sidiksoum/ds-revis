@@ -80,6 +80,14 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
     setTimeout(() => {
       setIsDownloading(false)
       setDownloadSuccess(true)
+
+      // Déclenchement du téléchargement réel du fichier APK statique
+      const link = document.createElement('a')
+      link.href = '/dsrevis.apk'
+      link.download = 'dsrevis.apk'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     }, 2000)
   }
 
