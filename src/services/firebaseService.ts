@@ -20,6 +20,7 @@ export interface AcademicYear {
 export interface FiliereItem {
   id: string
   name: string
+  years?: string[]
 }
 
 // Les interfaces suivantes étendent vos types existants pour y inclure l'ID requis par l'UI
@@ -46,6 +47,8 @@ export interface DashboardStats {
   usersByFiliere: { [key: string]: number }
   coursesByYear: { [key: string]: number }
   coursesByFiliere: { [key: string]: number }
+  usersByCountry: { [key: string]: { total: number; premium: number } }
+  usersByAntenne: { [key: string]: { total: number; premium: number } }
 }
 
 export async function clearPedeagoficalDataOnly() {
@@ -82,6 +85,70 @@ export async function clearPedeagoficalDataOnly() {
   }
 }
 
+export async function importPedagogicalData(
+  years: { name: string }[],
+  filieres: { name: string; years: string[] }[],
+  courses: CourseItem[],
+  quiz: QuizQuestion[]
+) {
+  // 1. Purge des anciennes donnees
+  await clearPedeagoficalDataOnly();
+
+  // 2. Batches d'insertion
+  let batch = writeBatch(db);
+  let count = 0;
+
+  for (const y of years) {
+    if (count >= 500) {
+      await batch.commit();
+      batch = writeBatch(db);
+      count = 0;
+    }
+    const newDocRef = doc(yearsCollection);
+    batch.set(newDocRef, y);
+    count++;
+  }
+
+  for (const f of filieres) {
+    if (count >= 500) {
+      await batch.commit();
+      batch = writeBatch(db);
+      count = 0;
+    }
+    const newDocRef = doc(filieresCollection);
+    batch.set(newDocRef, f);
+    count++;
+  }
+
+  for (const c of courses) {
+    if (count >= 500) {
+      await batch.commit();
+      batch = writeBatch(db);
+      count = 0;
+    }
+    const newDocRef = doc(coursesCollection);
+    batch.set(newDocRef, c);
+    count++;
+  }
+
+  for (const q of quiz) {
+    if (count >= 500) {
+      await batch.commit();
+      batch = writeBatch(db);
+      count = 0;
+    }
+    const newDocRef = doc(quizCollection);
+    batch.set(newDocRef, q);
+    count++;
+  }
+
+  if (count > 0) {
+    await batch.commit();
+  }
+
+  await touchDatabaseVersion();
+}
+
 export async function getDashboardStatistics(): Promise<DashboardStats> {
   const [usersSnap, yearsSnap, filieresSnap, coursesSnap, quizSnap] = await Promise.all([
     getDocs(usersCollection),
@@ -101,19 +168,36 @@ export async function getDashboardStatistics(): Promise<DashboardStats> {
     usersByYear: {},
     usersByFiliere: {},
     coursesByYear: {},
-    coursesByFiliere: {}
+    coursesByFiliere: {},
+    usersByCountry: {},
+    usersByAntenne: {}
   }
 
   // Calculs sur les utilisateurs
   usersSnap.forEach((doc) => {
     const data = doc.data()
-    if (data.premium) stats.premiumUsers++
+    const isPremium = data.premium === true
+    if (isPremium) stats.premiumUsers++
     
     const year = data.level || 'Non spécifié'
     stats.usersByYear[year] = (stats.usersByYear[year] || 0) + 1
 
     const filiere = data.filiere || 'Non spécifié'
     stats.usersByFiliere[filiere] = (stats.usersByFiliere[filiere] || 0) + 1
+
+    const country = data.country || 'Non spécifié'
+    if (!stats.usersByCountry[country]) {
+      stats.usersByCountry[country] = { total: 0, premium: 0 }
+    }
+    stats.usersByCountry[country].total++
+    if (isPremium) stats.usersByCountry[country].premium++
+
+    const antenne = data.antenne || 'Non spécifié'
+    if (!stats.usersByAntenne[antenne]) {
+      stats.usersByAntenne[antenne] = { total: 0, premium: 0 }
+    }
+    stats.usersByAntenne[antenne].total++
+    if (isPremium) stats.usersByAntenne[antenne].premium++
   })
 
   // Calculs sur les cours
@@ -268,8 +352,8 @@ export async function deleteYear(id: string) {
 
 // --- COLLECTION : FILIERES ---
 
-export async function addFiliere(filiere: string) {
-  await addDoc(filieresCollection, { name: filiere })
+export async function addFiliere(filiere: string, years: string[] = []) {
+  await addDoc(filieresCollection, { name: filiere, years })
   await touchDatabaseVersion()
 }
 
@@ -277,15 +361,17 @@ export async function getFilieresFromFirestore(): Promise<FiliereItem[]> {
   const snapshot = await getDocs(filieresCollection)
   return snapshot.docs.map((doc) => {
     const data = doc.data()
+    const years = data && Array.isArray(data.years) ? data.years : []
     return {
       id: doc.id,
+      years,
       name: data && typeof data.name === 'string' ? data.name : (data.name || 'Filière sans nom')
     }
   })
 }
 
-export async function updateFiliere(id: string, name: string) {
-  await updateDoc(doc(db, 'filieres', id), { name })
+export async function updateFiliere(id: string, name: string, years: string[] = []) {
+  await updateDoc(doc(db, 'filieres', id), { name, years })
   await touchDatabaseVersion()
 }
 

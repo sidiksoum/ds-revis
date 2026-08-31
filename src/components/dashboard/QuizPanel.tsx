@@ -554,8 +554,61 @@ export function QuizPanel() {
                         </select>
                       </div>
                       <div>
-                        <label className="mb-1.5 block text-xs font-medium text-slate-600">Réponse attendue (exacte)</label>
-                        <input value={block.correctAnswer} onChange={(e) => updateQuestionBlockField(qIndex, 'correctAnswer', e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none focus:border-amber-400 text-sm" placeholder="Ex: Vrai, ou libellé exact de la bonne option" />
+                        <label className="mb-1.5 block text-xs font-medium text-slate-600">Réponse attendue (sélectionnez la ou les bonne(s) option(s))</label>
+                        {block.type === 'QCD' ? (
+                          <div className="flex gap-2">
+                            {['Vrai', 'Faux'].map((val) => {
+                              const isSelected = block.correctAnswer === val;
+                              return (
+                                <button
+                                  key={val}
+                                  type="button"
+                                  onClick={() => updateQuestionBlockField(qIndex, 'correctAnswer', val)}
+                                  className={`rounded-xl border px-4 py-2 text-xs font-semibold cursor-pointer ${
+                                    isSelected ? 'border-amber-600 bg-amber-50 text-amber-700 font-bold' : 'border-slate-200 bg-white text-slate-600'
+                                  }`}
+                                >
+                                  {val}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {block.options.map((opt, optIdx) => {
+                              if (!opt.trim()) return null;
+                              const selectedOptions = block.correctAnswer
+                                ? block.correctAnswer.split(',').map((o) => o.trim()).filter(Boolean)
+                                : [];
+                              const isSelected = selectedOptions.includes(opt.trim());
+                              return (
+                                <button
+                                  key={optIdx}
+                                  type="button"
+                                  onClick={() => {
+                                    let nextSelected = [...selectedOptions];
+                                    if (isSelected) {
+                                      nextSelected = nextSelected.filter(o => o !== opt.trim());
+                                    } else {
+                                      nextSelected.push(opt.trim());
+                                    }
+                                    updateQuestionBlockField(qIndex, 'correctAnswer', nextSelected.join(', '));
+                                  }}
+                                  className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                                    isSelected
+                                      ? 'border-amber-600 bg-amber-50 text-amber-700 font-bold'
+                                      : 'border-slate-200 bg-white text-slate-600'
+                                  }`}
+                                >
+                                  {opt.trim()}
+                                </button>
+                              )
+                            })}
+                            {block.options.filter((o) => o.trim()).length === 0 && (
+                              <span className="text-xs text-slate-400 italic">Veuillez remplir les options ci-dessous pour pouvoir choisir la réponse</span>
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {block.type === 'QCM' && block.options.map((option, optIndex) => (
@@ -704,7 +757,60 @@ export function QuizPanel() {
                   </div>
                   <div>
                     <label className="mb-1.5 block text-sm font-semibold text-slate-700">Réponse correcte</label>
-                    <input value={editDraft?.correctAnswer ?? ''} onChange={(e) => setEditDraft((prev) => prev ? { ...prev, correctAnswer: e.target.value } : prev)} className="w-full rounded-xl border border-slate-200 px-4 py-2.5 outline-none" />
+                    {editDraft?.type === 'QCD' ? (
+                      <div className="flex gap-2">
+                        {['Vrai', 'Faux'].map((val) => {
+                          const isSelected = editDraft.correctAnswer === val;
+                          return (
+                            <button
+                              key={val}
+                              type="button"
+                              onClick={() => setEditDraft((prev) => prev ? { ...prev, correctAnswer: val } : prev)}
+                              className={`rounded-xl border px-4 py-2 text-xs font-semibold cursor-pointer ${
+                                isSelected ? 'border-amber-600 bg-amber-50 text-amber-700 font-bold' : 'border-slate-200 bg-white text-slate-600'
+                              }`}
+                            >
+                              {val}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {(editDraft?.options ?? []).map((opt, optIdx) => {
+                          if (!opt.trim()) return null;
+                          const selectedOptions = editDraft.correctAnswer
+                            ? editDraft.correctAnswer.split(',').map((o) => o.trim()).filter(Boolean)
+                            : [];
+                          const isSelected = selectedOptions.includes(opt.trim());
+                          return (
+                            <button
+                              key={optIdx}
+                              type="button"
+                              onClick={() => {
+                                let nextSelected = [...selectedOptions];
+                                if (isSelected) {
+                                  nextSelected = nextSelected.filter(o => o !== opt.trim());
+                                } else {
+                                  nextSelected.push(opt.trim());
+                                }
+                                setEditDraft((prev) => prev ? { ...prev, correctAnswer: nextSelected.join(', ') } : prev);
+                              }}
+                              className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition cursor-pointer ${
+                                isSelected
+                                  ? 'border-amber-600 bg-amber-50 text-amber-700 font-bold'
+                                  : 'border-slate-200 bg-white text-slate-600'
+                              }`}
+                            >
+                              {opt.trim()}
+                            </button>
+                          )
+                        })}
+                        {(editDraft?.options ?? []).filter((o) => o.trim()).length === 0 && (
+                          <span className="text-xs text-slate-400 italic">Veuillez remplir les options ci-dessous pour pouvoir choisir la réponse</span>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   {editDraft?.type === 'QCM' && (editDraft?.options ?? []).map((option, index) => (
