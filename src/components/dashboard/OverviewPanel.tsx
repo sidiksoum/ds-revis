@@ -397,21 +397,21 @@ export function OverviewPanel() {
           "Inscriptions par Pays",
           "Répartition géographique",
           stats.usersByCountry,
-          "étudiants"
+          "éÉtudiants"
         )}
 
         {renderDoubleVerticalChart(
           "Inscriptions par Antenne locale / Ville",
           "Répartition par antenne",
           stats.usersByAntenne,
-          "étudiants"
+          "éÉtudiants"
         )}
 
         {renderVerticalChart(
           "Utilisateurs inscrits par Année Académique",
-          "Démographie étudiante",
+          "Démographie éÉtudiante",
           stats.usersByYear,
-          "étudiants",
+          "éÉtudiants",
           "from-sky-500 to-cyan-400"
         )}
 
@@ -419,7 +419,7 @@ export function OverviewPanel() {
           "Utilisateurs inscrits par Filière d'étude",
           "Répartition par spécialité",
           stats.usersByFiliere,
-          "étudiants",
+          "éÉtudiants",
           "from-indigo-500 to-violet-400"
         )}
 

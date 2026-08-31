@@ -620,7 +620,7 @@ export function QuizPanel() {
 
                       <div className="md:col-span-2">
                         <label className="mb-1.5 block text-xs font-medium text-slate-600">Explication pédagogique (correction)</label>
-                        <textarea value={block.explanation} onChange={(e) => updateQuestionBlockField(qIndex, 'explanation', e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-amber-400" rows={2} placeholder="Explication pédagogique apportée aux étudiants..." />
+                        <textarea value={block.explanation} onChange={(e) => updateQuestionBlockField(qIndex, 'explanation', e.target.value)} className="w-full rounded-xl border border-slate-200 px-4 py-2 text-sm outline-none focus:border-amber-400" rows={2} placeholder="Explication pédagogique apportée aux éÉtudiants..." />
                       </div>
                     </div>
                   </div>
@@ -760,7 +760,7 @@ export function QuizPanel() {
                     {editDraft?.type === 'QCD' ? (
                       <div className="flex gap-2">
                         {['Vrai', 'Faux'].map((val) => {
-                          const isSelected = editDraft.correctAnswer === val;
+                          const isSelected = editDraft?.correctAnswer === val;
                           return (
                             <button
                               key={val}
@@ -779,8 +779,9 @@ export function QuizPanel() {
                       <div className="flex flex-wrap gap-2">
                         {(editDraft?.options ?? []).map((opt, optIdx) => {
                           if (!opt.trim()) return null;
-                          const selectedOptions = editDraft.correctAnswer
-                            ? editDraft.correctAnswer.split(',').map((o) => o.trim()).filter(Boolean)
+                          const currentCorrect = editDraft?.correctAnswer ?? '';
+                          const selectedOptions = currentCorrect
+                            ? currentCorrect.split(',').map((o) => o.trim()).filter(Boolean)
                             : [];
                           const isSelected = selectedOptions.includes(opt.trim());
                           return (
