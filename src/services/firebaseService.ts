@@ -36,6 +36,13 @@ export interface FirestoreQuizQuestion extends QuizQuestion {
   id: string
 }
 
+export interface DailyRegistrationStat {
+  date: string
+  fullDate: string
+  total: number
+  premium: number
+}
+
 export interface DashboardStats {
   totalUsers: number
   premiumUsers: number
@@ -49,6 +56,7 @@ export interface DashboardStats {
   coursesByFiliere: { [key: string]: number }
   usersByCountry: { [key: string]: { total: number; premium: number } }
   usersByAntenne: { [key: string]: { total: number; premium: number } }
+  dailyRegistrations: DailyRegistrationStat[]
 }
 
 export async function clearPedeagoficalDataOnly() {
@@ -170,10 +178,13 @@ export async function getDashboardStatistics(): Promise<DashboardStats> {
     coursesByYear: {},
     coursesByFiliere: {},
     usersByCountry: {},
-    usersByAntenne: {}
+    usersByAntenne: {},
+    dailyRegistrations: []
   }
 
   // Calculs sur les utilisateurs
+  const rawDailyMap: { [dateStr: string]: { total: number; premium: number } } = {}
+
   usersSnap.forEach((doc) => {
     const data = doc.data()
     const isPremium = data.premium === true
@@ -198,7 +209,70 @@ export async function getDashboardStatistics(): Promise<DashboardStats> {
     }
     stats.usersByAntenne[antenne].total++
     if (isPremium) stats.usersByAntenne[antenne].premium++
+
+    // Date d'inscription
+    let dateStr = ''
+    if (data.createdAt) {
+      if (typeof data.createdAt.toDate === 'function') {
+        dateStr = data.createdAt.toDate().toISOString().split('T')[0]
+      } else if (typeof data.createdAt === 'string') {
+        dateStr = data.createdAt.split('T')[0]
+      } else if (typeof data.createdAt === 'number') {
+        dateStr = new Date(data.createdAt).toISOString().split('T')[0]
+      }
+    }
+
+    if (!dateStr) {
+      const today = new Date().toISOString().split('T')[0]
+      dateStr = today
+    }
+
+    if (!rawDailyMap[dateStr]) {
+      rawDailyMap[dateStr] = { total: 0, premium: 0 }
+    }
+    rawDailyMap[dateStr].total++
+    if (isPremium) rawDailyMap[dateStr].premium++
   })
+
+  // Historique journalier sur les 30 derniers jours
+  const dailyList: DailyRegistrationStat[] = []
+  const today = new Date()
+  const daysToShow = 30
+
+  for (let i = daysToShow - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    const dateKey = d.toISOString().split('T')[0]
+    
+    const day = String(d.getDate()).padStart(2, '0')
+    const month = String(d.getMonth() + 1).padStart(2, '0')
+    const shortLabel = `${day}/${month}`
+
+    const counts = rawDailyMap[dateKey] || { total: 0, premium: 0 }
+    dailyList.push({
+      date: shortLabel,
+      fullDate: dateKey,
+      total: counts.total,
+      premium: counts.premium
+    })
+  }
+
+  // Si des inscriptions ont des dates antérieures, les ajouter
+  Object.keys(rawDailyMap).forEach((dateKey) => {
+    if (!dailyList.some(item => item.fullDate === dateKey)) {
+      const parts = dateKey.split('-')
+      const shortLabel = parts.length >= 3 ? `${parts[2]}/${parts[1]}` : dateKey
+      dailyList.push({
+        date: shortLabel,
+        fullDate: dateKey,
+        total: rawDailyMap[dateKey].total,
+        premium: rawDailyMap[dateKey].premium
+      })
+    }
+  })
+
+  dailyList.sort((a, b) => a.fullDate.localeCompare(b.fullDate))
+  stats.dailyRegistrations = dailyList
 
   // Calculs sur les cours
   coursesSnap.forEach((doc) => {
