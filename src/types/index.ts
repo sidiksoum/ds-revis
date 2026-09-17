@@ -32,9 +32,14 @@ export interface AppUser {
   id?: string
   name: string
   email: string
+  password?: string
   level: string
   filiere: string
   premium: boolean
   isActive: boolean
   role?: string
+  country?: string
+  antenne?: string
+  createdAt?: string
+  passwordUpdatedAt?: string
 }
